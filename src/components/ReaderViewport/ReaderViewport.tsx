@@ -91,7 +91,7 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
         );
       }
 
-      // Initialize the reader with the manifest file
+      // Initialize the reader with the manifest file and enable positions
       console.log("Initializing D2Reader with URL:", url.toString());
       const readerInstance = await D2Reader.load({
         url: url,
@@ -101,6 +101,10 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
         settings: {
           verticalScroll: true,
           enableGPUHardwareAcceleration: true,
+        },
+        // Enable position generation for book-wide progress calculation
+        rights: {
+          autoGeneratePositions: true,
         },
       });
 
@@ -129,14 +133,227 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
         });
       }
 
-      // Set up event listeners
-      if (readerInstance.on) {
-        readerInstance.on("location", (location: any) => {
-          console.log("Location changed:", location);
-          setCurrentLocation(location.href || location.toString());
-          setProgress(location.progress || 0);
+      console.log(
+        "Reader instance addEventListener:",
+        typeof readerInstance.addEventListener
+      );
+
+      // Function to calculate and update progress for ENTIRE BOOK using totalProgression
+      const updateProgress = () => {
+        try {
+          // Use the correct r2d2bc API: currentLocator getter
+          const locator = readerInstance.currentLocator;
+          if (locator) {
+            console.log("Current locator:", locator);
+
+            // Set current location from locator
+            if (locator.href) {
+              setCurrentLocation(locator.href);
+            }
+
+            // FIRST PRIORITY: Use totalProgression for entire book progress
+            if (
+              locator.locations &&
+              locator.locations.totalProgression !== undefined
+            ) {
+              const totalBookProgress = locator.locations.totalProgression;
+              setProgress(totalBookProgress);
+              console.log(
+                "TOTAL BOOK PROGRESS (totalProgression):",
+                totalBookProgress
+              );
+              return;
+            }
+
+            // SECOND PRIORITY: Try to get positions and calculate manually
+            const positions = readerInstance.positions;
+            if (positions && positions.length > 0 && locator.locations) {
+              // Find current position in the positions array
+              const currentHref = locator.href;
+              let currentPositionIndex = -1;
+
+              for (let i = 0; i < positions.length; i++) {
+                if (positions[i].href === currentHref) {
+                  currentPositionIndex = i;
+                  break;
+                }
+              }
+
+              if (currentPositionIndex >= 0) {
+                // Add intra-position progress if available
+                const baseProgress =
+                  currentPositionIndex / (positions.length - 1);
+                const intraProgress = locator.locations.progression || 0;
+                const positionContribution = intraProgress / positions.length;
+                const totalProgress = Math.min(
+                  baseProgress + positionContribution,
+                  1
+                );
+
+                setProgress(totalProgress);
+                console.log(
+                  "CALCULATED BOOK PROGRESS from positions:",
+                  totalProgress,
+                  "Position:",
+                  currentPositionIndex + 1,
+                  "of",
+                  positions.length
+                );
+                return;
+              }
+            }
+
+            // THIRD PRIORITY: Manual calculation using spine items
+            const currentChapterLink = (readerInstance as any).navigator
+              ?.currentChapterLink;
+            if (currentChapterLink && (readerInstance as any).publication) {
+              const spineItems =
+                (readerInstance as any).publication.readingOrder || [];
+              const currentIndex = spineItems.findIndex(
+                (item: any) =>
+                  item.href === currentChapterLink.href ||
+                  item.Href === currentChapterLink.href
+              );
+
+              if (currentIndex >= 0 && spineItems.length > 0) {
+                // Base progress: which chapter we're in
+                const chapterBaseProgress = currentIndex / spineItems.length;
+
+                // Intra-chapter progress from CFI
+                let chapterProgress = 0;
+                if (
+                  locator.locations &&
+                  locator.locations.progression !== undefined
+                ) {
+                  chapterProgress = locator.locations.progression;
+                } else if (locator.progression !== undefined) {
+                  chapterProgress = locator.progression;
+                }
+
+                // Total progress = base progress + (chapter progress / total chapters)
+                const totalProgress =
+                  chapterBaseProgress + chapterProgress / spineItems.length;
+                const clampedProgress = Math.min(Math.max(totalProgress, 0), 1);
+
+                setProgress(clampedProgress);
+                console.log(
+                  "FALLBACK BOOK PROGRESS:",
+                  clampedProgress,
+                  "Chapter:",
+                  currentIndex + 1,
+                  "of",
+                  spineItems.length,
+                  "Chapter progress:",
+                  chapterProgress
+                );
+                return;
+              }
+            }
+          }
+
+          // Last resort: simple chapter-based progress
+          const currentChapterLink = (readerInstance as any).navigator
+            ?.currentChapterLink;
+          if (currentChapterLink && (readerInstance as any).publication) {
+            const spineItems =
+              (readerInstance as any).publication.readingOrder || [];
+            const currentIndex = spineItems.findIndex(
+              (item: any) =>
+                item.href === currentChapterLink.href ||
+                item.Href === currentChapterLink.href
+            );
+
+            if (currentIndex >= 0 && spineItems.length > 0) {
+              const chapterProgress =
+                currentIndex / Math.max(spineItems.length - 1, 1);
+              setProgress(chapterProgress);
+              console.log(
+                "SIMPLE CHAPTER PROGRESS:",
+                chapterProgress,
+                "Chapter:",
+                currentIndex + 1,
+                "of",
+                spineItems.length
+              );
+            }
+          }
+        } catch (error) {
+          console.error("Error updating progress:", error);
+        }
+      };
+
+      // Set up proper r2d2bc event listeners (no setTimeout delays)
+      if (readerInstance.addEventListener) {
+        // Location/navigation change events
+        readerInstance.addEventListener("relocate", (locator: any) => {
+          console.log("Relocate event with locator:", locator);
+          updateProgress();
         });
 
+        // Page turn events
+        readerInstance.addEventListener("turn", () => {
+          console.log("Page turn event");
+          updateProgress();
+        });
+
+        // Click events for navigation
+        readerInstance.addEventListener("click", () => {
+          console.log("Click event");
+          updateProgress();
+        });
+
+        // Keyboard navigation events
+        readerInstance.addEventListener("keydown", (event: any) => {
+          console.log("Keydown event:", event);
+          // Update progress on arrow keys, page keys, etc.
+          if (
+            event.key === "ArrowLeft" ||
+            event.key === "ArrowRight" ||
+            event.key === "PageUp" ||
+            event.key === "PageDown" ||
+            event.key === "Home" ||
+            event.key === "End"
+          ) {
+            updateProgress();
+          }
+        });
+
+        // Resource loading events
+        readerInstance.addEventListener("resource.ready", () => {
+          console.log("Resource ready event");
+          updateProgress();
+        });
+
+        readerInstance.addEventListener("resource.start", () => {
+          console.log("Resource start event");
+          updateProgress();
+        });
+
+        readerInstance.addEventListener("resource.end", () => {
+          console.log("Resource end event");
+          updateProgress();
+        });
+
+        readerInstance.addEventListener("resource.fits", () => {
+          console.log("Resource fits event");
+          updateProgress();
+        });
+
+        // Navigation events
+        readerInstance.addEventListener("navigate", () => {
+          console.log("Navigate event");
+          updateProgress();
+        });
+
+        // Direction change events
+        readerInstance.addEventListener("direction", (direction: any) => {
+          console.log("Direction change event:", direction);
+          updateProgress();
+        });
+      }
+
+      // Set up metadata and TOC handling if available
+      if (readerInstance.on) {
         readerInstance.on("metadata", (metadata: any) => {
           console.log("Metadata received:", metadata);
           setMetadata({
@@ -157,16 +374,16 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
 
         readerInstance.on("ready", () => {
           console.log("Reader is ready");
+          updateProgress(); // Update progress when ready (no timeout)
           setLoading(false);
         });
       }
 
-      setReader(readerInstance);
+      // Initial progress update (no timeout)
+      updateProgress();
 
-      // If no 'ready' event, set loading to false after a delay
-      setTimeout(() => {
-        setLoading(false);
-      }, 3000);
+      setReader(readerInstance);
+      setLoading(false);
     } catch (readerError) {
       console.error("Error in D2Reader initialization:", readerError);
       throw new Error(

@@ -3,7 +3,6 @@ import {
   ArrowForward,
   Bookmark as BookmarkIcon,
   Menu as MenuIcon,
-  ViewHeadline as ScrollIcon,
   Settings as SettingsIcon,
 } from "@mui/icons-material";
 import React from "react";
@@ -75,15 +74,6 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
               onClick={previousPage}
             >
               <ArrowBack />
-            </IconButton>
-
-            <IconButton
-              color="inherit"
-              aria-label="toggle scroll mode"
-              onClick={toggleScrollMode}
-              title="Toggle scroll/pagination mode"
-            >
-              <ScrollIcon />
             </IconButton>
 
             <IconButton
