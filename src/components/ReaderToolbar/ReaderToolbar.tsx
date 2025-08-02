@@ -3,8 +3,8 @@ import {
   ArrowForward,
   Bookmark as BookmarkIcon,
   Menu as MenuIcon,
-  Settings as SettingsIcon,
   ViewHeadline as ScrollIcon,
+  Settings as SettingsIcon,
 } from "@mui/icons-material";
 import React from "react";
 import { useReaderStore } from "store";
@@ -40,7 +40,8 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
 
   const toggleScrollMode = () => {
     if (reader && reader.scroll) {
-      const isCurrentlyScrolling = reader.currentSettings?.verticalScroll ?? false;
+      const isCurrentlyScrolling =
+        reader.currentSettings?.verticalScroll ?? false;
       reader.scroll(!isCurrentlyScrolling);
     }
   };

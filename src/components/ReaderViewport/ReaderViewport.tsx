@@ -101,7 +101,7 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
         settings: {
           verticalScroll: true,
           enableGPUHardwareAcceleration: true,
-        }
+        },
       });
 
       console.log("Reader instance created:", readerInstance);
@@ -313,7 +313,6 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
         },
         "& iframe": {
           width: "100%",
-          height: "100%",
           border: "none",
         },
         "& .loading": {
