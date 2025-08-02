@@ -5,7 +5,7 @@ export interface ReaderState {
   isSettingsOpen: boolean;
   isTocOpen: boolean;
   fontSize: number;
-  theme: 'light' | 'dark' | 'sepia';
+  theme: "light" | "dark" | "sepia";
   fontFamily: string;
   lineHeight: number;
   marginSize: number;
@@ -39,7 +39,7 @@ export interface ReadingPosition {
 export interface ReaderSettings {
   fontSize: number;
   fontFamily: string;
-  theme: 'light' | 'dark' | 'sepia';
+  theme: "light" | "dark" | "sepia";
   lineHeight: number;
   marginSize: number;
   autoBookmark: boolean;

@@ -1,8 +1,7 @@
-import React from 'react';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { theme } from './theme';
-import { ReaderPage } from 'pages';
+import { CssBaseline, ThemeProvider } from "@mui/material";
+import { ReaderPage } from "pages";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { theme } from "./theme";
 
 function App() {
   return (

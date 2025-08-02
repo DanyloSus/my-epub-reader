@@ -1,1 +1,1 @@
-export { ReaderSettings } from './ReaderSettings';
+export { ReaderSettings } from "./ReaderSettings";

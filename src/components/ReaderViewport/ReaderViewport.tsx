@@ -79,14 +79,16 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
       // Test the URL accessibility first
       console.log("Testing URL accessibility...");
       try {
-        const response = await fetch(url.toString(), { method: 'HEAD' });
+        const response = await fetch(url.toString(), { method: "HEAD" });
         console.log("URL test response:", response.status, response.statusText);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
       } catch (fetchError) {
         console.error("URL accessibility test failed:", fetchError);
-        throw new Error(`Cannot access EPUB URL: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
+        throw new Error(
+          `Cannot access EPUB URL: ${fetchError instanceof Error ? fetchError.message : "Unknown error"}`
+        );
       }
 
       // Initialize the reader with the manifest file
@@ -95,9 +97,25 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
         url: url,
         injectables: [],
         injectablesFixed: [],
+        // Enable scrolling and proper content handling
+        settings: {
+          verticalScroll: true,
+          enableGPUHardwareAcceleration: true,
+        }
       });
 
       console.log("Reader instance created:", readerInstance);
+
+      // Configure reader for optimal scrolling
+      if (readerInstance.scroll) {
+        readerInstance.scroll(true); // Enable vertical scrolling
+      }
+
+      // Ensure content can be scrolled
+      if (readerInstance.setProperty) {
+        readerInstance.setProperty("--RS__scroll", "readium-scroll-on");
+        readerInstance.setProperty("--RS__colCount", "1");
+      }
 
       // The reader manages its own DOM, so we don't need to manually handle iframe
       // Apply initial settings
@@ -149,10 +167,11 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
       setTimeout(() => {
         setLoading(false);
       }, 3000);
-
     } catch (readerError) {
       console.error("Error in D2Reader initialization:", readerError);
-      throw new Error(`Failed to initialize reader: ${readerError instanceof Error ? readerError.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to initialize reader: ${readerError instanceof Error ? readerError.message : "Unknown error"}`
+      );
     }
   };
 
@@ -280,15 +299,17 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
         width: "100%",
         height: "100%",
         position: "relative",
-        overflow: "hidden",
+        overflow: "auto",
         "& #D2Reader-Container": {
           width: "100%",
           height: "100%",
+          overflow: "auto",
         },
         "& #iframe-wrapper": {
           width: "100%",
           height: "100%",
           display: "block",
+          overflow: "auto",
         },
         "& iframe": {
           width: "100%",

@@ -1,19 +1,14 @@
-import React from 'react';
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
-  Box,
-} from 'ui';
-import {
-  Menu as MenuIcon,
-  Settings as SettingsIcon,
-  Bookmark as BookmarkIcon,
   ArrowBack,
   ArrowForward,
-} from '@mui/icons-material';
-import { useReaderStore } from 'store';
+  Bookmark as BookmarkIcon,
+  Menu as MenuIcon,
+  Settings as SettingsIcon,
+  ViewHeadline as ScrollIcon,
+} from "@mui/icons-material";
+import React from "react";
+import { useReaderStore } from "store";
+import { AppBar, Box, IconButton, Toolbar, Typography } from "ui";
 
 interface ReaderToolbarProps {
   title?: string;
@@ -21,7 +16,7 @@ interface ReaderToolbarProps {
 }
 
 export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
-  title = 'EPUB Reader',
+  title = "EPUB Reader",
   showNavigation = true,
 }) => {
   const {
@@ -32,6 +27,7 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
     nextPage,
     previousPage,
     progress,
+    reader,
   } = useReaderStore();
 
   const handleTocToggle = () => {
@@ -40,6 +36,13 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
 
   const handleSettingsToggle = () => {
     setSettingsOpen(!isSettingsOpen);
+  };
+
+  const toggleScrollMode = () => {
+    if (reader && reader.scroll) {
+      const isCurrentlyScrolling = reader.currentSettings?.verticalScroll ?? false;
+      reader.scroll(!isCurrentlyScrolling);
+    }
   };
 
   return (
@@ -60,11 +63,11 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         </Typography>
 
         {showNavigation && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography variant="body2" sx={{ mr: 2 }}>
               {Math.round(progress * 100)}%
             </Typography>
-            
+
             <IconButton
               color="inherit"
               aria-label="previous page"
@@ -72,7 +75,16 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             >
               <ArrowBack />
             </IconButton>
-            
+
+            <IconButton
+              color="inherit"
+              aria-label="toggle scroll mode"
+              onClick={toggleScrollMode}
+              title="Toggle scroll/pagination mode"
+            >
+              <ScrollIcon />
+            </IconButton>
+
             <IconButton
               color="inherit"
               aria-label="next page"
@@ -83,11 +95,7 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           </Box>
         )}
 
-        <IconButton
-          color="inherit"
-          aria-label="bookmarks"
-          sx={{ ml: 1 }}
-        >
+        <IconButton color="inherit" aria-label="bookmarks" sx={{ ml: 1 }}>
           <BookmarkIcon />
         </IconButton>
 

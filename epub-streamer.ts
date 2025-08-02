@@ -1,7 +1,7 @@
 import { Server } from "dita-streamer-js";
 import express from "express";
 import path from "path";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,11 +24,11 @@ async function start() {
   // Add our EPUB file
   const epubPath = path.join(__dirname, "public", "games.epub");
   console.log("Adding EPUB:", epubPath);
-  
+
   try {
     const publicationURLs = server.addPublications([epubPath]);
     console.log("Publication URLs:", publicationURLs);
-    
+
     if (publicationURLs.length > 0) {
       console.log("Games EPUB available at:", publicationURLs[0]);
     }
@@ -37,8 +37,10 @@ async function start() {
   }
 
   const data = await server.start(4444, false);
-  console.log(`EPUB streaming server running at: http://localhost:${data.urlPort}`);
-  
+  console.log(
+    `EPUB streaming server running at: http://localhost:${data.urlPort}`
+  );
+
   return server;
 }
 

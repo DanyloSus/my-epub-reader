@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, CircularProgress, Typography, Button } from "ui";
+import { Box, Button, CircularProgress, Typography } from "ui";
 
 export const TestReaderViewport: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -9,7 +9,7 @@ export const TestReaderViewport: React.FC = () => {
   const testD2Reader = async () => {
     try {
       setStatus("Loading D2Reader library...");
-      
+
       // Try to load the built D2Reader
       let D2Reader: any;
       try {
@@ -18,7 +18,7 @@ export const TestReaderViewport: React.FC = () => {
         setStatus("D2Reader library loaded successfully");
       } catch (esError) {
         setStatus("ES module failed, trying script...");
-        
+
         // Fallback: load the IIFE version as a script
         const script = document.createElement("script");
         script.src = "/r2d2bc/dist/reader.js";
@@ -43,7 +43,6 @@ export const TestReaderViewport: React.FC = () => {
         console.log("D2Reader object:", D2Reader);
         console.log("D2Reader methods:", Object.getOwnPropertyNames(D2Reader));
       }
-      
     } catch (error) {
       console.error("D2Reader test failed:", error);
       setError(error instanceof Error ? error.message : "Unknown error");
@@ -81,11 +80,7 @@ export const TestReaderViewport: React.FC = () => {
           Error: {error}
         </Typography>
       )}
-      <Button 
-        variant="outlined" 
-        onClick={testD2Reader}
-        sx={{ mt: 2 }}
-      >
+      <Button variant="outlined" onClick={testD2Reader} sx={{ mt: 2 }}>
         Retry Test
       </Button>
     </Box>

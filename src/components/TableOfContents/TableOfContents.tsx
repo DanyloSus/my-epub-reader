@@ -1,16 +1,16 @@
-import React from 'react';
+import React from "react";
+import { useReaderStore } from "store";
+import { TocItem } from "types";
 import {
-  Drawer,
   Box,
-  Typography,
+  Divider,
+  Drawer,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
-  Divider,
-} from 'ui';
-import { useReaderStore } from 'store';
-import { TocItem } from 'types';
+  Typography,
+} from "ui";
 
 interface TableOfContentsProps {
   width?: number;
@@ -19,13 +19,8 @@ interface TableOfContentsProps {
 export const TableOfContents: React.FC<TableOfContentsProps> = ({
   width = 300,
 }) => {
-  const {
-    isTocOpen,
-    setTocOpen,
-    toc,
-    goToLocation,
-    metadata,
-  } = useReaderStore();
+  const { isTocOpen, setTocOpen, toc, goToLocation, metadata } =
+    useReaderStore();
 
   const handleClose = () => {
     setTocOpen(false);
@@ -48,7 +43,7 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
         <ListItemText
           primary={item.title}
           primaryTypographyProps={{
-            variant: level === 0 ? 'subtitle2' : 'body2',
+            variant: level === 0 ? "subtitle2" : "body2",
             fontWeight: level === 0 ? 500 : 400,
           }}
         />
@@ -56,8 +51,11 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
     </ListItem>
   );
 
-  const renderTocItems = (items: TocItem[], level: number = 0): React.ReactNode[] => {
-    return items.flatMap(item => [
+  const renderTocItems = (
+    items: TocItem[],
+    level: number = 0
+  ): React.ReactNode[] => {
+    return items.flatMap((item) => [
       renderTocItem(item, level),
       ...(item.children ? renderTocItems(item.children, level + 1) : []),
     ]);
@@ -76,7 +74,7 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
         <Typography variant="h6" gutterBottom>
           Table of Contents
         </Typography>
-        
+
         {metadata && (
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle1" gutterBottom>
@@ -87,14 +85,12 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
             </Typography>
           </Box>
         )}
-        
+
         <Divider sx={{ mb: 1 }} />
       </Box>
 
       {toc.length > 0 ? (
-        <List dense>
-          {renderTocItems(toc)}
-        </List>
+        <List dense>{renderTocItems(toc)}</List>
       ) : (
         <Box sx={{ p: 2 }}>
           <Typography variant="body2" color="text.secondary">

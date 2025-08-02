@@ -9,12 +9,12 @@ export const generateId = (): string => {
  * Format date for display
  */
 export const formatDate = (date: Date): string => {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(date);
 };
 
@@ -23,7 +23,7 @@ export const formatDate = (date: Date): string => {
  */
 export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
-  return text.substr(0, maxLength).trim() + '...';
+  return text.substr(0, maxLength).trim() + "...";
 };
 
 /**
@@ -32,13 +32,16 @@ export const truncateText = (text: string, maxLength: number): string => {
 export const extractTextFromCfi = (cfi: string, content: string): string => {
   // This is a simplified implementation
   // In a real app, you'd want to use the r2d2bc utilities for this
-  return content.substring(0, 100) + '...';
+  return content.substring(0, 100) + "...";
 };
 
 /**
  * Get reading time estimate
  */
-export const getReadingTimeEstimate = (wordCount: number, wordsPerMinute: number = 200): number => {
+export const getReadingTimeEstimate = (
+  wordCount: number,
+  wordsPerMinute: number = 200
+): number => {
   return Math.ceil(wordCount / wordsPerMinute);
 };
 

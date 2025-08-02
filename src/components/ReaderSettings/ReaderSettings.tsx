@@ -1,18 +1,18 @@
-import React from 'react';
+import React from "react";
+import { useReaderStore } from "store";
 import {
-  Drawer,
   Box,
-  Typography,
-  Slider,
-  MenuItem,
-  Divider,
   Button,
+  Divider,
+  Drawer,
   FormControl,
   InputLabel,
+  MenuItem,
   Select,
   SelectChangeEvent,
-} from 'ui';
-import { useReaderStore } from 'store';
+  Slider,
+  Typography,
+} from "ui";
 
 interface ReaderSettingsProps {
   width?: number;
@@ -45,22 +45,22 @@ export const ReaderSettings: React.FC<ReaderSettingsProps> = ({
   };
 
   const handleThemeChange = (event: SelectChangeEvent) => {
-    setTheme(event.target.value as 'light' | 'dark' | 'sepia');
+    setTheme(event.target.value as "light" | "dark" | "sepia");
   };
 
   const fontFamilies = [
-    { value: 'Georgia', label: 'Georgia' },
-    { value: 'Times New Roman', label: 'Times New Roman' },
-    { value: 'Arial', label: 'Arial' },
-    { value: 'Helvetica', label: 'Helvetica' },
-    { value: 'Verdana', label: 'Verdana' },
-    { value: 'Open Dyslexic', label: 'Open Dyslexic' },
+    { value: "Georgia", label: "Georgia" },
+    { value: "Times New Roman", label: "Times New Roman" },
+    { value: "Arial", label: "Arial" },
+    { value: "Helvetica", label: "Helvetica" },
+    { value: "Verdana", label: "Verdana" },
+    { value: "Open Dyslexic", label: "Open Dyslexic" },
   ];
 
   const themes = [
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
-    { value: 'sepia', label: 'Sepia' },
+    { value: "light", label: "Light" },
+    { value: "dark", label: "Dark" },
+    { value: "sepia", label: "Sepia" },
   ];
 
   return (
@@ -113,11 +113,7 @@ export const ReaderSettings: React.FC<ReaderSettingsProps> = ({
         <Box sx={{ mb: 3 }}>
           <FormControl fullWidth>
             <InputLabel>Theme</InputLabel>
-            <Select
-              value={theme}
-              label="Theme"
-              onChange={handleThemeChange}
-            >
+            <Select value={theme} label="Theme" onChange={handleThemeChange}>
               {themes.map((themeOption) => (
                 <MenuItem key={themeOption.value} value={themeOption.value}>
                   {themeOption.label}
@@ -159,11 +155,7 @@ export const ReaderSettings: React.FC<ReaderSettingsProps> = ({
 
         <Divider sx={{ my: 3 }} />
 
-        <Button
-          variant="outlined"
-          fullWidth
-          onClick={handleClose}
-        >
+        <Button variant="outlined" fullWidth onClick={handleClose}>
           Close Settings
         </Button>
       </Box>
