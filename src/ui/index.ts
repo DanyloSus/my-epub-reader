@@ -16,5 +16,8 @@ export * from "./Menu";
 export * from "./MenuItem";
 export * from "./Select";
 export * from "./Slider";
+export * from "./Tab";
+export * from "./Tabs";
 export * from "./Toolbar";
+export * from "./Tooltip";
 export * from "./Typography";

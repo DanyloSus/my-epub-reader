@@ -367,14 +367,43 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
           });
         });
 
-        readerInstance.on("toc", (toc: any) => {
-          console.log("TOC received:", toc);
-          setToc(toc || []);
-        });
-
         readerInstance.on("ready", () => {
           console.log("Reader is ready");
           updateProgress(); // Update progress when ready (no timeout)
+
+          // Get TOC directly from reader property (following r2d2bc example)
+          try {
+            const tocData = readerInstance.tableOfContents;
+            console.log("TOC from reader.tableOfContents:", tocData);
+
+            if (tocData && tocData.length > 0) {
+              // Convert r2d2bc TOC format to our format
+              const convertTocItem = (item: any, level: number = 0): any => ({
+                id: item.href || `toc-${Math.random()}`,
+                title: item.title || "Untitled",
+                href: item.href,
+                level: level,
+                children: item.children
+                  ? item.children.map((child: any) =>
+                      convertTocItem(child, level + 1)
+                    )
+                  : [],
+              });
+
+              const convertedToc = tocData.map((item: any) =>
+                convertTocItem(item, 0)
+              );
+              setToc(convertedToc);
+              console.log("Converted TOC:", convertedToc);
+            } else {
+              console.log("No TOC available from reader.tableOfContents");
+              setToc([]);
+            }
+          } catch (error) {
+            console.error("Error getting TOC from reader:", error);
+            setToc([]);
+          }
+
           setLoading(false);
         });
       }
@@ -383,6 +412,37 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
       updateProgress();
 
       setReader(readerInstance);
+
+      // Get TOC as fallback (in case ready event doesn't fire)
+      try {
+        setTimeout(() => {
+          const tocData = readerInstance.tableOfContents;
+          console.log("TOC fallback check:", tocData);
+
+          if (tocData && tocData.length > 0) {
+            const convertTocItem = (item: any, level: number = 0): any => ({
+              id: item.href || `toc-${Math.random()}`,
+              title: item.title || "Untitled",
+              href: item.href,
+              level: level,
+              children: item.children
+                ? item.children.map((child: any) =>
+                    convertTocItem(child, level + 1)
+                  )
+                : [],
+            });
+
+            const convertedToc = tocData.map((item: any) =>
+              convertTocItem(item, 0)
+            );
+            setToc(convertedToc);
+            console.log("Fallback TOC set:", convertedToc);
+          }
+        }, 2000); // Give reader time to load
+      } catch (error) {
+        console.error("Error in TOC fallback:", error);
+      }
+
       setLoading(false);
     } catch (readerError) {
       console.error("Error in D2Reader initialization:", readerError);

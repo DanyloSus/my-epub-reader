@@ -1,7 +1,6 @@
 import {
   ArrowBack,
   ArrowForward,
-  Bookmark as BookmarkIcon,
   Menu as MenuIcon,
   Settings as SettingsIcon,
 } from "@mui/icons-material";
@@ -85,10 +84,6 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             </IconButton>
           </Box>
         )}
-
-        <IconButton color="inherit" aria-label="bookmarks" sx={{ ml: 1 }}>
-          <BookmarkIcon />
-        </IconButton>
 
         <IconButton
           color="inherit"

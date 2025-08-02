@@ -54,6 +54,7 @@ interface ReaderStore extends ReaderState {
   bookmarks: Bookmark[];
   addBookmark: (bookmark: Bookmark) => void;
   removeBookmark: (id: string) => void;
+  createBookmark: () => Bookmark | null;
 
   // Highlights
   highlights: Highlight[];
@@ -62,7 +63,11 @@ interface ReaderStore extends ReaderState {
   updateHighlight: (id: string, updates: Partial<Highlight>) => void;
 
   // Actions
-  goToLocation: (location: string) => void;
+  goToLocation: (
+    location:
+      | string
+      | { href: string; locations?: { progression?: number; cfi?: string } }
+  ) => void;
   nextPage: () => void;
   previousPage: () => void;
   resetReader: () => void;
@@ -160,6 +165,77 @@ export const useReaderStore = create<ReaderStore>()(
           bookmarks: state.bookmarks.filter((bookmark) => bookmark.id !== id),
         })),
 
+      createBookmark: () => {
+        const { reader, currentLocation } = get();
+        console.log(
+          "Creating bookmark - reader:",
+          !!reader,
+          "currentLocation:",
+          currentLocation
+        );
+
+        if (reader && currentLocation) {
+          try {
+            // Check if getCurrentLocator method exists
+            if (
+              reader.getCurrentLocator &&
+              typeof reader.getCurrentLocator === "function"
+            ) {
+              const locator = reader.getCurrentLocator();
+              console.log("Got locator:", locator);
+              const bookmark: Bookmark = {
+                id: Date.now().toString(),
+                cfi: locator.locations?.cfi || "",
+                href: locator.href || currentLocation,
+                title:
+                  locator.title ||
+                  `Bookmark ${new Date().toLocaleDateString()}`,
+                excerpt: locator.text || "",
+                timestamp: new Date(),
+              };
+              get().addBookmark(bookmark);
+              console.log("Bookmark created:", bookmark);
+              return bookmark;
+            } else {
+              console.log(
+                "getCurrentLocator not available, creating fallback bookmark"
+              );
+              // Fallback bookmark creation without locator
+              const bookmark: Bookmark = {
+                id: Date.now().toString(),
+                cfi: "",
+                href: currentLocation,
+                title: `Bookmark ${new Date().toLocaleDateString()}`,
+                excerpt: "",
+                timestamp: new Date(),
+              };
+              get().addBookmark(bookmark);
+              console.log("Fallback bookmark created:", bookmark);
+              return bookmark;
+            }
+          } catch (error) {
+            console.error("Error creating bookmark:", error);
+            // Fallback bookmark creation
+            const bookmark: Bookmark = {
+              id: Date.now().toString(),
+              cfi: "",
+              href: currentLocation,
+              title: `Bookmark ${new Date().toLocaleDateString()}`,
+              excerpt: "",
+              timestamp: new Date(),
+            };
+            get().addBookmark(bookmark);
+            console.log("Error fallback bookmark created:", bookmark);
+            return bookmark;
+          }
+        } else {
+          console.error(
+            "Cannot create bookmark - missing reader or currentLocation"
+          );
+          return null;
+        }
+      },
+
       // Highlights
       addHighlight: (highlight) =>
         set((state) => ({ highlights: [...state.highlights, highlight] })),
@@ -182,11 +258,30 @@ export const useReaderStore = create<ReaderStore>()(
       goToLocation: (location) => {
         const { reader } = get();
         if (reader && reader.goTo) {
-          reader.goTo(location);
-          set({ currentLocation: location });
+          // If location is a string (href), convert to locator object
+          if (typeof location === "string") {
+            const locator = {
+              href: location,
+              locations: { progression: 0 },
+            };
+            console.log("Navigating to locator:", locator);
+            reader.goTo(locator);
+          } else {
+            // If it's already an object, use it directly
+            console.log("Navigating to location:", location);
+            reader.goTo(location);
+          }
+          set({
+            currentLocation:
+              typeof location === "string" ? location : location.href,
+          });
         } else if (reader && reader.navigateTo) {
-          reader.navigateTo(location);
-          set({ currentLocation: location });
+          const href = typeof location === "string" ? location : location.href;
+          console.log("Using navigateTo fallback:", href);
+          reader.navigateTo(href);
+          set({ currentLocation: href });
+        } else {
+          console.error("No navigation method available on reader");
         }
       },
 
