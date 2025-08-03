@@ -39,25 +39,15 @@ src/
 - Node.js 16+ 
 - npm or yarn
 
-### Installation
+### Starting the Application:
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd my-epub-reader
-```
+1. Install dependencies: npm install
 
-2. Install dependencies:
-```bash
-npm install
-```
+2. Start EPUB server: node epub-server.js (port 3003)
 
-3. Start the development server:
-```bash
-npm run dev
-```
+3. Start streamer: npm run streamer (port 4444)
 
-4. Open your browser and navigate to `http://localhost:3000`
+4. Start React app: npm run dev (port 3000)
 
 ### Using Your Own EPUB Files
 
