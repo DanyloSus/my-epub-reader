@@ -95,7 +95,23 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
       console.log("Initializing D2Reader with URL:", url.toString());
       const readerInstance = await D2Reader.load({
         url: url,
-        injectables: [],
+        injectables: [
+          {
+            type: "style",
+            url: "/readium-css/ReadiumCSS-before.css",
+            r2before: true,
+          },
+          {
+            type: "style", 
+            url: "/readium-css/ReadiumCSS-default.css",
+            r2default: true,
+          },
+          {
+            type: "style",
+            url: "/readium-css/ReadiumCSS-after.css", 
+            r2after: true,
+          },
+        ],
         injectablesFixed: [],
         // Enable scrolling and proper content handling
         settings: {
@@ -124,12 +140,49 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
       // The reader manages its own DOM, so we don't need to manually handle iframe
       // Apply initial settings
       if (readerInstance.applyUserSettings) {
+        // Map font family to r2d2bc expected values
+        const r2d2bcFontFamily = (() => {
+          const fontFamilyMap: { [key: string]: string } = {
+            "Georgia": "serif",
+            "Times New Roman": "serif",
+            "Arial": "sans-serif",
+            "Helvetica": "sans-serif", 
+            "Verdana": "sans-serif",
+            "Open Dyslexic": "opendyslexic",
+          };
+          return fontFamilyMap[fontFamily] || "Original"; // Default fallback
+        })();
+
+        const settings = {
+          fontSize: fontSize, // Direct percentage value
+          fontFamily: r2d2bcFontFamily, // String values: "serif", "sans-serif", "opendyslexic", etc.
+          appearance: theme === 'light' ? 'day' : theme === 'sepia' ? 'sepia' : 'night', // String values
+          lineHeight: lineHeight, // Direct value
+          pageMargins: marginSize, // Direct value
+        };
+        console.log("Applying initial user settings:", settings);
         readerInstance.applyUserSettings({
-          fontSize,
-          fontFamily,
-          theme,
-          lineHeight,
-          marginSize,
+          ...settings,
+          verticalScroll: true // Ensure scroll mode is enabled
+        }).then(() => {
+          console.log("Settings applied successfully");
+          // Force a refresh of the current view if available
+          if (reader.refresh) {
+            reader.refresh();
+          }
+          // Debug: Check what CSS properties are actually set
+          if (reader.settings && reader.settings.userProperties) {
+            console.log("Current user properties:", reader.settings.userProperties);
+          }
+          // Debug: Check if iframe is accessible
+          if (reader.settings && reader.settings.iframe) {
+            console.log("Reader iframe found:", reader.settings.iframe);
+            console.log("Iframe content document:", reader.settings.iframe.contentDocument);
+          } else {
+            console.log("Reader iframe not found in settings");
+          }
+        }).catch((error: any) => {
+          console.error("Error applying initial settings:", error);
         });
       }
 
@@ -536,13 +589,87 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
   // Apply settings changes to the reader
   useEffect(() => {
     if (reader && reader.applyUserSettings) {
-      reader.applyUserSettings({
-        fontSize,
-        fontFamily,
-        theme,
-        lineHeight,
-        marginSize,
-      });
+      // Map font family to r2d2bc expected values
+      const r2d2bcFontFamily = (() => {
+        const fontFamilyMap: { [key: string]: string } = {
+          "Georgia": "serif",
+          "Times New Roman": "serif", 
+          "Arial": "sans-serif",
+          "Helvetica": "sans-serif",
+          "Verdana": "sans-serif",
+          "Open Dyslexic": "opendyslexic",
+        };
+        return fontFamilyMap[fontFamily] || "Original"; // Default fallback
+      })();
+
+      const settings = {
+        fontSize: fontSize, // Direct percentage value
+        fontFamily: r2d2bcFontFamily, // String values: "serif", "sans-serif", "opendyslexic", etc.
+        appearance: theme === 'light' ? 'day' : theme === 'sepia' ? 'sepia' : 'night', // String values
+        lineHeight: lineHeight, // Direct value
+        pageMargins: marginSize, // Direct value
+      };
+      console.log("Updating reader settings:", settings);
+      
+      // Try multiple approaches to apply settings
+      const applySettings = async () => {
+        try {
+          // Approach 1: Use applyUserSettings
+          await reader.applyUserSettings({
+            ...settings,
+            verticalScroll: true // Ensure scroll mode is maintained
+          });
+          console.log("applyUserSettings completed");
+
+          // Approach 2: If the reader has currentSettings, check what's actually set
+          if (reader.currentSettings) {
+            console.log("Current reader settings:", reader.currentSettings);
+          }
+
+          // Approach 3: Try manual CSS property setting if available
+          if (reader.settings && reader.settings.setProperty) {
+            console.log("Trying manual CSS property setting");
+            reader.settings.setProperty("--USER__fontSize", settings.fontSize.toString());
+            reader.settings.setProperty("--USER__fontFamily", settings.fontFamily);
+            reader.settings.setProperty("--USER__appearance", settings.appearance);
+            reader.settings.setProperty("--USER__lineHeight", settings.lineHeight.toString());
+            reader.settings.setProperty("--USER__pageMargins", settings.pageMargins.toString());
+          }
+
+          // Approach 4: Force re-render if possible
+          if (reader.refresh) {
+            reader.refresh();
+          } else if (reader.render) {
+            reader.render();
+          }
+
+          console.log("Settings applied successfully");
+          
+          // Debug: Check iframe accessibility
+          if (reader.settings && reader.settings.iframe) {
+            console.log("Reader iframe found:", reader.settings.iframe);
+            const doc = reader.settings.iframe.contentDocument;
+            if (doc) {
+              console.log("Iframe content document accessible");
+              const html = doc.querySelector('html');
+              if (html) {
+                console.log("HTML element found, checking applied styles:");
+                console.log("Font size:", html.style.getPropertyValue('--USER__fontSize'));
+                console.log("Font family:", html.style.getPropertyValue('--USER__fontFamily'));
+                console.log("Appearance:", html.style.getPropertyValue('--USER__appearance'));
+              }
+            } else {
+              console.log("Iframe content document not accessible");
+            }
+          } else {
+            console.log("Reader iframe not found in settings");
+          }
+        } catch (error: any) {
+          console.error("Error applying settings:", error);
+        }
+      };
+
+      applySettings();
     }
   }, [reader, fontSize, fontFamily, theme, lineHeight, marginSize]);
 

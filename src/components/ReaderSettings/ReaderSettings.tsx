@@ -84,8 +84,8 @@ export const ReaderSettings: React.FC<ReaderSettingsProps> = ({
           <Slider
             value={fontSize}
             onChange={(_, value) => setFontSize(value as number)}
-            min={12}
-            max={24}
+            min={50}
+            max={150}
             step={1}
             marks
             valueLabelDisplay="auto"
