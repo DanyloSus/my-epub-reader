@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useReaderStore } from "store";
 import { Box, CircularProgress, Typography } from "ui";
 import "./ReaderViewport.css";
@@ -25,7 +25,47 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
     theme,
     lineHeight,
     marginSize,
+    isPaginated,
+    nextPage,
+    previousPage,
   } = useReaderStore();
+
+  // Handle click for page navigation in paginated mode
+  const handleContainerClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      console.log(
+        "Container click - isPaginated:",
+        isPaginated,
+        "reader:",
+        !!reader
+      );
+
+      if (!isPaginated || !reader) return;
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const containerWidth = rect.width;
+
+      console.log(
+        "Click position:",
+        clickX,
+        "container width:",
+        containerWidth,
+        "left half:",
+        clickX < containerWidth / 2
+      );
+
+      // Left half goes to previous page, right half goes to next page
+      if (clickX < containerWidth / 2) {
+        console.log("Going to previous page");
+        reader.previousPage();
+      } else {
+        console.log("Going to next page");
+        reader.nextPage();
+      }
+    },
+    [isPaginated, reader]
+  );
 
   const initializeWithReader = async (D2Reader: any) => {
     console.log("Loading EPUB from:", epubUrl);
@@ -102,13 +142,13 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
             r2before: true,
           },
           {
-            type: "style", 
+            type: "style",
             url: "/readium-css/ReadiumCSS-default.css",
             r2default: true,
           },
           {
             type: "style",
-            url: "/readium-css/ReadiumCSS-after.css", 
+            url: "/readium-css/ReadiumCSS-after.css",
             r2after: true,
           },
         ],
@@ -143,11 +183,11 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
         // Map font family to r2d2bc expected values
         const r2d2bcFontFamily = (() => {
           const fontFamilyMap: { [key: string]: string } = {
-            "Georgia": "serif",
+            Georgia: "serif",
             "Times New Roman": "serif",
-            "Arial": "sans-serif",
-            "Helvetica": "sans-serif", 
-            "Verdana": "sans-serif",
+            Arial: "sans-serif",
+            Helvetica: "sans-serif",
+            Verdana: "sans-serif",
             "Open Dyslexic": "opendyslexic",
           };
           return fontFamilyMap[fontFamily] || "Original"; // Default fallback
@@ -156,34 +196,44 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
         const settings = {
           fontSize: fontSize, // Direct percentage value
           fontFamily: r2d2bcFontFamily, // String values: "serif", "sans-serif", "opendyslexic", etc.
-          appearance: theme === 'light' ? 'day' : theme === 'sepia' ? 'sepia' : 'night', // String values
+          appearance:
+            theme === "light" ? "day" : theme === "sepia" ? "sepia" : "night", // String values
           lineHeight: lineHeight, // Direct value
           pageMargins: marginSize, // Direct value
         };
         console.log("Applying initial user settings:", settings);
-        readerInstance.applyUserSettings({
-          ...settings,
-          verticalScroll: true // Ensure scroll mode is enabled
-        }).then(() => {
-          console.log("Settings applied successfully");
-          // Force a refresh of the current view if available
-          if (reader.refresh) {
-            reader.refresh();
-          }
-          // Debug: Check what CSS properties are actually set
-          if (reader.settings && reader.settings.userProperties) {
-            console.log("Current user properties:", reader.settings.userProperties);
-          }
-          // Debug: Check if iframe is accessible
-          if (reader.settings && reader.settings.iframe) {
-            console.log("Reader iframe found:", reader.settings.iframe);
-            console.log("Iframe content document:", reader.settings.iframe.contentDocument);
-          } else {
-            console.log("Reader iframe not found in settings");
-          }
-        }).catch((error: any) => {
-          console.error("Error applying initial settings:", error);
-        });
+        readerInstance
+          .applyUserSettings({
+            ...settings,
+            verticalScroll: true, // Ensure scroll mode is enabled
+          })
+          .then(() => {
+            console.log("Settings applied successfully");
+            // Force a refresh of the current view if available
+            if (reader.refresh) {
+              reader.refresh();
+            }
+            // Debug: Check what CSS properties are actually set
+            if (reader.settings && reader.settings.userProperties) {
+              console.log(
+                "Current user properties:",
+                reader.settings.userProperties
+              );
+            }
+            // Debug: Check if iframe is accessible
+            if (reader.settings && reader.settings.iframe) {
+              console.log("Reader iframe found:", reader.settings.iframe);
+              console.log(
+                "Iframe content document:",
+                reader.settings.iframe.contentDocument
+              );
+            } else {
+              console.log("Reader iframe not found in settings");
+            }
+          })
+          .catch((error: any) => {
+            console.error("Error applying initial settings:", error);
+          });
       }
 
       console.log(
@@ -592,11 +642,11 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
       // Map font family to r2d2bc expected values
       const r2d2bcFontFamily = (() => {
         const fontFamilyMap: { [key: string]: string } = {
-          "Georgia": "serif",
-          "Times New Roman": "serif", 
-          "Arial": "sans-serif",
-          "Helvetica": "sans-serif",
-          "Verdana": "sans-serif",
+          Georgia: "serif",
+          "Times New Roman": "serif",
+          Arial: "sans-serif",
+          Helvetica: "sans-serif",
+          Verdana: "sans-serif",
           "Open Dyslexic": "opendyslexic",
         };
         return fontFamilyMap[fontFamily] || "Original"; // Default fallback
@@ -605,19 +655,20 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
       const settings = {
         fontSize: fontSize, // Direct percentage value
         fontFamily: r2d2bcFontFamily, // String values: "serif", "sans-serif", "opendyslexic", etc.
-        appearance: theme === 'light' ? 'day' : theme === 'sepia' ? 'sepia' : 'night', // String values
+        appearance:
+          theme === "light" ? "day" : theme === "sepia" ? "sepia" : "night", // String values
         lineHeight: lineHeight, // Direct value
         pageMargins: marginSize, // Direct value
       };
       console.log("Updating reader settings:", settings);
-      
+
       // Try multiple approaches to apply settings
       const applySettings = async () => {
         try {
           // Approach 1: Use applyUserSettings
           await reader.applyUserSettings({
             ...settings,
-            verticalScroll: true // Ensure scroll mode is maintained
+            verticalScroll: true, // Ensure scroll mode is maintained
           });
           console.log("applyUserSettings completed");
 
@@ -629,11 +680,26 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
           // Approach 3: Try manual CSS property setting if available
           if (reader.settings && reader.settings.setProperty) {
             console.log("Trying manual CSS property setting");
-            reader.settings.setProperty("--USER__fontSize", settings.fontSize.toString());
-            reader.settings.setProperty("--USER__fontFamily", settings.fontFamily);
-            reader.settings.setProperty("--USER__appearance", settings.appearance);
-            reader.settings.setProperty("--USER__lineHeight", settings.lineHeight.toString());
-            reader.settings.setProperty("--USER__pageMargins", settings.pageMargins.toString());
+            reader.settings.setProperty(
+              "--USER__fontSize",
+              settings.fontSize.toString()
+            );
+            reader.settings.setProperty(
+              "--USER__fontFamily",
+              settings.fontFamily
+            );
+            reader.settings.setProperty(
+              "--USER__appearance",
+              settings.appearance
+            );
+            reader.settings.setProperty(
+              "--USER__lineHeight",
+              settings.lineHeight.toString()
+            );
+            reader.settings.setProperty(
+              "--USER__pageMargins",
+              settings.pageMargins.toString()
+            );
           }
 
           // Approach 4: Force re-render if possible
@@ -644,19 +710,28 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
           }
 
           console.log("Settings applied successfully");
-          
+
           // Debug: Check iframe accessibility
           if (reader.settings && reader.settings.iframe) {
             console.log("Reader iframe found:", reader.settings.iframe);
             const doc = reader.settings.iframe.contentDocument;
             if (doc) {
               console.log("Iframe content document accessible");
-              const html = doc.querySelector('html');
+              const html = doc.querySelector("html");
               if (html) {
                 console.log("HTML element found, checking applied styles:");
-                console.log("Font size:", html.style.getPropertyValue('--USER__fontSize'));
-                console.log("Font family:", html.style.getPropertyValue('--USER__fontFamily'));
-                console.log("Appearance:", html.style.getPropertyValue('--USER__appearance'));
+                console.log(
+                  "Font size:",
+                  html.style.getPropertyValue("--USER__fontSize")
+                );
+                console.log(
+                  "Font family:",
+                  html.style.getPropertyValue("--USER__fontFamily")
+                );
+                console.log(
+                  "Appearance:",
+                  html.style.getPropertyValue("--USER__appearance")
+                );
               }
             } else {
               console.log("Iframe content document not accessible");
@@ -736,6 +811,62 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
           "100%": { transform: "rotate(360deg)" },
         },
       }}
-    />
+    >
+      {/* Debug indicator */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 10,
+          right: 10,
+          zIndex: 1000,
+          backgroundColor: "rgba(0,0,0,0.7)",
+          color: "white",
+          padding: "4px 8px",
+          borderRadius: "4px",
+          fontSize: "12px",
+        }}
+      >
+        Mode: {isPaginated ? "Paginated" : "Scroll"}
+      </Box>
+
+      {/* Debug navigation buttons */}
+      {isPaginated && (
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: 10,
+            left: 10,
+            zIndex: 1000,
+            display: "flex",
+            gap: 1,
+          }}
+        >
+          <button
+            onClick={() => reader?.previousPage?.()}
+            style={{
+              padding: "8px",
+              background: "#007acc",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+            }}
+          >
+            Prev Page
+          </button>
+          <button
+            onClick={() => reader?.nextPage?.()}
+            style={{
+              padding: "8px",
+              background: "#007acc",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+            }}
+          >
+            Next Page
+          </button>
+        </Box>
+      )}
+    </Box>
   );
 };

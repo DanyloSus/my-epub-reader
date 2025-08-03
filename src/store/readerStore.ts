@@ -36,11 +36,13 @@ interface ReaderStore extends ReaderState {
   fontFamily: string;
   lineHeight: number;
   marginSize: number;
+  isPaginated: boolean;
   setFontSize: (size: number) => void;
   setTheme: (theme: "light" | "dark" | "sepia") => void;
   setFontFamily: (family: string) => void;
   setLineHeight: (height: number) => void;
   setMarginSize: (size: number) => void;
+  setIsPaginated: (paginated: boolean) => Promise<void>;
 
   // Book metadata
   metadata: EpubMetadata | null;
@@ -88,6 +90,7 @@ export const useReaderStore = create<ReaderStore>()(
       fontFamily: "Georgia",
       lineHeight: 1.4,
       marginSize: 2,
+      isPaginated: false,
       metadata: null,
       toc: [],
       bookmarks: [],
@@ -147,6 +150,44 @@ export const useReaderStore = create<ReaderStore>()(
         const { reader } = get();
         if (reader) {
           reader.applyUserSettings({ marginSize });
+        }
+      },
+
+      setIsPaginated: async (isPaginated) => {
+        set({ isPaginated });
+        const { reader } = get();
+        if (reader) {
+          console.log(
+            "Setting paginated mode:",
+            isPaginated,
+            "scroll value:",
+            !isPaginated
+          );
+          console.log(
+            "Current settings before:",
+            reader.currentSettings?.verticalScroll
+          );
+
+          // Call scroll method: true for scroll mode, false for paginated mode
+          await reader.scroll(!isPaginated);
+
+          // Log settings after the async operation completes
+          console.log(
+            "Current settings after:",
+            reader.currentSettings?.verticalScroll
+          );
+
+          // Also log the iframe state after a delay to ensure CSS is applied
+          setTimeout(() => {
+            const iframe = document.querySelector(
+              "#iframe-wrapper iframe"
+            ) as HTMLIFrameElement;
+            if (iframe && iframe.contentDocument) {
+              const html = iframe.contentDocument.documentElement;
+              const scrollVar = html.style.getPropertyValue("--USER__scroll");
+              console.log("CSS --USER__scroll variable:", scrollVar);
+            }
+          }, 500);
         }
       },
 

@@ -6,11 +6,13 @@ import {
   Divider,
   Drawer,
   FormControl,
+  FormControlLabel,
   InputLabel,
   MenuItem,
   Select,
   SelectChangeEvent,
   Slider,
+  Switch,
   Typography,
 } from "ui";
 
@@ -34,6 +36,8 @@ export const ReaderSettings: React.FC<ReaderSettingsProps> = ({
     setLineHeight,
     marginSize,
     setMarginSize,
+    isPaginated,
+    setIsPaginated,
   } = useReaderStore();
 
   const handleClose = () => {
@@ -46,6 +50,12 @@ export const ReaderSettings: React.FC<ReaderSettingsProps> = ({
 
   const handleThemeChange = (event: SelectChangeEvent) => {
     setTheme(event.target.value as "light" | "dark" | "sepia");
+  };
+
+  const handleViewModeChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    await setIsPaginated(event.target.checked);
   };
 
   const fontFamilies = [
@@ -121,6 +131,28 @@ export const ReaderSettings: React.FC<ReaderSettingsProps> = ({
               ))}
             </Select>
           </FormControl>
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isPaginated}
+                onChange={handleViewModeChange}
+                color="primary"
+              />
+            }
+            label={
+              <Box>
+                <Typography variant="subtitle2">View Mode</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {isPaginated
+                    ? "Paginated (click to turn pages)"
+                    : "Scroll (continuous reading)"}
+                </Typography>
+              </Box>
+            }
+          />
         </Box>
 
         <Box sx={{ mb: 3 }}>
