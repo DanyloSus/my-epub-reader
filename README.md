@@ -41,13 +41,13 @@ src/
 
 ### Starting the Application:
 
-1. Install dependencies: npm install
+1. Install dependencies: `npm install`
 
-2. Start EPUB server: node epub-server.js (port 3003)
+2. Start EPUB server: `node epub-server.js` (port 3003)
 
-3. Start streamer: npm run streamer (port 4444)
+3. Start streamer: `npm run streamer` (port 4444)
 
-4. Start React app: npm run dev (port 3000)
+4. Start React app: `npm run dev` (port 3000)
 
 ### Using Your Own EPUB Files
 
