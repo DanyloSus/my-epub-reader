@@ -2,7 +2,9 @@
 export * from "./AppBar";
 export * from "./Box";
 export * from "./Button";
+export * from "./Chip";
 export * from "./CircularProgress";
+export * from "./Dialog";
 export * from "./Divider";
 export * from "./Drawer";
 export * from "./FormControl";
@@ -20,6 +22,7 @@ export * from "./Slider";
 export * from "./Switch";
 export * from "./Tab";
 export * from "./Tabs";
+export * from "./TextField";
 export * from "./Toolbar";
 export * from "./Tooltip";
 export * from "./Typography";

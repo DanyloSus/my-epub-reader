@@ -42,3 +42,31 @@
   justify-content: center;
   height: 100%;
 }
+
+/* Text selection and highlight styles */
+#D2Reader-Container ::selection {
+  background-color: rgba(255, 255, 0, 0.3);
+}
+
+#D2Reader-Container ::-moz-selection {
+  background-color: rgba(255, 255, 0, 0.3);
+}
+
+/* Ensure text selection is enabled in the reader */
+#D2Reader-Container * {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* Style for existing highlights */
+.r2d2bc-highlight {
+  border-bottom: 2px solid currentColor;
+  cursor: pointer;
+  position: relative;
+}
+
+.r2d2bc-highlight:hover {
+  opacity: 0.8;
+}

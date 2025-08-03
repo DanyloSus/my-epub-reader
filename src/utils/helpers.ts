@@ -29,7 +29,7 @@ export const truncateText = (text: string, maxLength: number): string => {
 /**
  * Extract text from CFI range
  */
-export const extractTextFromCfi = (cfi: string, content: string): string => {
+export const extractTextFromCfi = (_cfi: string, content: string): string => {
   // This is a simplified implementation
   // In a real app, you'd want to use the r2d2bc utilities for this
   return content.substring(0, 100) + "...";

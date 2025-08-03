@@ -1,4 +1,5 @@
 import {
+  NoteCreationModal,
   ReaderSettings,
   ReaderToolbar,
   ReaderViewport,
@@ -9,7 +10,15 @@ import { useReaderStore } from "store";
 import { Box, Button } from "ui";
 
 export const ReaderPage: React.FC = () => {
-  const { metadata } = useReaderStore();
+  const {
+    metadata,
+    isNoteModalOpen,
+    selectedText,
+    selectedTextCfi,
+    selectedTextHref,
+    setNoteModalOpen,
+    createHighlightFromSelection,
+  } = useReaderStore();
   const [epubSource, setEpubSource] = useState<"demo" | "local">("local");
 
   const epubUrls = {
@@ -70,6 +79,15 @@ export const ReaderPage: React.FC = () => {
 
       <TableOfContents />
       <ReaderSettings />
+
+      <NoteCreationModal
+        open={isNoteModalOpen}
+        onClose={() => setNoteModalOpen(false)}
+        selectedText={selectedText}
+        onSave={createHighlightFromSelection}
+        cfi={selectedTextCfi}
+        href={selectedTextHref}
+      />
     </Box>
   );
 };

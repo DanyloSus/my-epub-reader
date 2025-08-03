@@ -1,3 +1,5 @@
+export * from "./NoteCreationModal";
+export * from "./NotesDialog";
 export * from "./ReaderSettings";
 export * from "./ReaderToolbar";
 export * from "./ReaderViewport";

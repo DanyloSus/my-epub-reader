@@ -64,6 +64,17 @@ interface ReaderStore extends ReaderState {
   removeHighlight: (id: string) => void;
   updateHighlight: (id: string, updates: Partial<Highlight>) => void;
 
+  // Text Selection and Note Creation
+  isNoteModalOpen: boolean;
+  selectedText: string;
+  selectedTextCfi: string;
+  selectedTextHref: string;
+  setNoteModalOpen: (open: boolean) => void;
+  setSelectedText: (text: string, cfi: string, href: string) => void;
+  createHighlightFromSelection: (
+    highlight: Omit<Highlight, "id" | "timestamp">
+  ) => void;
+
   // Actions
   goToLocation: (
     location:
@@ -85,7 +96,7 @@ export const useReaderStore = create<ReaderStore>()(
       progress: 0,
       isSettingsOpen: false,
       isTocOpen: false,
-      fontSize: 16,
+      fontSize: 100,
       theme: "light",
       fontFamily: "Georgia",
       lineHeight: 1.4,
@@ -95,6 +106,12 @@ export const useReaderStore = create<ReaderStore>()(
       toc: [],
       bookmarks: [],
       highlights: [],
+
+      // Text selection state
+      isNoteModalOpen: false,
+      selectedText: "",
+      selectedTextCfi: "",
+      selectedTextHref: "",
 
       // Reader management
       setReader: (reader) => set({ reader }),
@@ -294,6 +311,39 @@ export const useReaderStore = create<ReaderStore>()(
             highlight.id === id ? { ...highlight, ...updates } : highlight
           ),
         })),
+
+      // Text Selection and Note Creation
+      setNoteModalOpen: (isNoteModalOpen) => set({ isNoteModalOpen }),
+
+      setSelectedText: (selectedText, selectedTextCfi, selectedTextHref) =>
+        set({ selectedText, selectedTextCfi, selectedTextHref }),
+
+      createHighlightFromSelection: (highlightData) => {
+        const highlight: Highlight = {
+          ...highlightData,
+          id: Date.now().toString(),
+          timestamp: new Date(),
+        };
+
+        // Add to store
+        get().addHighlight(highlight);
+
+        // Add to reader if available
+        const { reader } = get();
+        if (reader && reader.addAnnotation) {
+          // Create annotation for r2d2bc
+          const annotation = {
+            id: highlight.id,
+            cfi: highlight.cfi,
+            href: highlight.href,
+            text: highlight.text,
+            note: highlight.note || "",
+            color: highlight.color,
+            timestamp: highlight.timestamp.toISOString(),
+          };
+          reader.addAnnotation(annotation);
+        }
+      },
 
       // Actions
       goToLocation: (location) => {

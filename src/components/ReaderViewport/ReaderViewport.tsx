@@ -26,45 +26,56 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
     lineHeight,
     marginSize,
     isPaginated,
-    nextPage,
-    previousPage,
+    setSelectedText,
+    setNoteModalOpen,
   } = useReaderStore();
 
-  // Handle click for page navigation in paginated mode
-  const handleContainerClick = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
-      console.log(
-        "Container click - isPaginated:",
-        isPaginated,
-        "reader:",
-        !!reader
-      );
+  // Handle text selection for note creation
+  const handleTextSelection = useCallback(
+    (selection: any, element?: any) => {
+      console.log("Processing text selection:", selection);
+      console.log("Selection element:", element);
 
-      if (!isPaginated || !reader) return;
+      if (selection) {
+        // The selection parameter might be a string or an object
+        let selectedText = "";
 
-      const rect = event.currentTarget.getBoundingClientRect();
-      const clickX = event.clientX - rect.left;
-      const containerWidth = rect.width;
+        if (typeof selection === "string") {
+          selectedText = selection;
+        } else if (selection.cleanText) {
+          selectedText = selection.cleanText;
+        } else if (selection.rawText) {
+          selectedText = selection.rawText;
+        } else if (selection.text) {
+          selectedText = selection.text;
+        } else if (selection.toString) {
+          selectedText = selection.toString();
+        }
 
-      console.log(
-        "Click position:",
-        clickX,
-        "container width:",
-        containerWidth,
-        "left half:",
-        clickX < containerWidth / 2
-      );
+        console.log("Extracted text:", selectedText);
 
-      // Left half goes to previous page, right half goes to next page
-      if (clickX < containerWidth / 2) {
-        console.log("Going to previous page");
-        reader.previousPage();
+        if (selectedText.trim()) {
+          const currentLocation = reader?.currentLocator?.href || "";
+          // Simple CFI for now
+          const cfi = `cfi-${Date.now()}`;
+
+          console.log("Setting selected text:", {
+            selectedText,
+            cfi,
+            currentLocation,
+          });
+
+          // Set the selected text and open the note modal
+          setSelectedText(selectedText, cfi, currentLocation);
+          setNoteModalOpen(true);
+        } else {
+          console.warn("No text found in selection:", selection);
+        }
       } else {
-        console.log("Going to next page");
-        reader.nextPage();
+        console.warn("No selection received");
       }
     },
-    [isPaginated, reader]
+    [reader, setSelectedText, setNoteModalOpen]
   );
 
   const initializeWithReader = async (D2Reader: any) => {
@@ -161,10 +172,70 @@ export const ReaderViewport: React.FC<ReaderViewportProps> = ({
         // Enable position generation for book-wide progress calculation
         rights: {
           autoGeneratePositions: true,
+          enableAnnotations: true,
+          enableBookmarks: true,
+          enableSearch: true,
+          enableDefinitions: true,
+        },
+        // Configure text highlighting and selection
+        highlighter: {
+          selectionMenuItems: [
+            {
+              id: "highlight-note",
+              callback: function (selection: any, element?: any) {
+                console.log("=== TEXT SELECTION TRIGGERED ===");
+                console.log("Selection:", selection);
+                console.log("Element:", element);
+                console.log("Selection type:", typeof selection);
+
+                // Simple alert to test if selection works
+                alert("Text selected: " + selection);
+
+                // Then call our handler
+                handleTextSelection(selection, element);
+              },
+            },
+          ],
         },
       });
 
       console.log("Reader instance created:", readerInstance);
+
+      // Check if highlighter was configured correctly
+      if (readerInstance.highlighter) {
+        console.log("Highlighter found:", readerInstance.highlighter);
+      } else {
+        console.warn("No highlighter found on reader instance");
+      }
+
+      // Add manual text selection listener as fallback
+      setTimeout(() => {
+        const iframe = document.querySelector(
+          "#iframe-wrapper iframe"
+        ) as HTMLIFrameElement;
+        if (iframe && iframe.contentDocument) {
+          console.log("Adding manual text selection listener to iframe");
+          iframe.contentDocument.addEventListener("mouseup", (event) => {
+            const selection = iframe.contentWindow?.getSelection();
+            if (selection && selection.toString().trim()) {
+              console.log(
+                "Manual text selection detected:",
+                selection.toString()
+              );
+              // Show confirmation dialog
+              if (
+                confirm(
+                  `Create note for: "${selection.toString().substring(0, 50)}..."?`
+                )
+              ) {
+                handleTextSelection(selection.toString());
+              }
+            }
+          });
+        } else {
+          console.warn("Could not find iframe for manual text selection");
+        }
+      }, 2000); // Wait 2 seconds for iframe to load
 
       // Configure reader for optimal scrolling
       if (readerInstance.scroll) {
